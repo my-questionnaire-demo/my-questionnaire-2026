@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>可分享问卷系统（整合版）- 结果可回传</title>
+<style>
+*{box-sizing:border-box;font-family:Microsoft YaHei,sans-serif}
+body{background:#f7f8fa;margin:0;padding:20px}
+.container{max-width:900px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 2px 15px rgba(0,0,0,.08);overflow:hidden}
+.header{padding:20px 30px;background:#2196F3;color:#fff}
+.header h1{margin:0;font-size:22px}
+.tabs{display:flex;padding:0 20px;border-bottom:1px solid #eee}
+.tab{padding:14px 20px;cursor:pointer;background:0 0;border:none;font-size:15px;color:#666}
+.tab.active{color:#2196F3;border-bottom:2px solid #2196F3}
+.page{display:none;padding:25px 30px}
+.page.active{display:block}
+.btn{padding:9px 16px;border-radius:6px;border:none;background:#2196F3;color:#fff;cursor:pointer;margin:5px 0}
+.btn.red{background:#f44336}
+.btn.green{background:#4CAF50}
+.btn.gray{background:#999}
+.btn.orange{background:#ff9800}
+.design-box{border:1px solid #eee;border-radius:8px;padding:14px;margin-bottom:12px;position:relative}
+.design-box .title{font-weight:600;margin-bottom:8px}
+.design-box .del{position:absolute;right:12px;top:10px;background:#f44336;color:#fff;border:none;border-radius:4px;padding:3px 7px;font-size:12px;cursor:pointer}
+.opt{display:flex;gap:8px;margin:5px 0}
+.opt input{flex:1;padding:6px 8px;border:1px solid #ddd;border-radius:4px}
+.opt .del-opt{background:#f44336;color:#fff;border:none;border-radius:4px;width:26px;cursor:pointer}
+.add-q{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.add-q input,.add-q select{padding:8px 10px;border:1px solid #ddd;border-radius:6px;flex:1;min-width:160px}
+.progress{height:10px;background:#eee;border-radius:5px;overflow:hidden;margin-bottom:15px}
+.bar{height:100%;background:#4CAF50;width:0;transition:.3s}
+.question{padding:16px;border:1px solid #eee;border-radius:8px;margin-bottom:14px}
+.question h4{margin:0 0 10px}
+.question label{display:block;margin:6px 0}
+.share-box{background:#f9f9f9;border:1px dashed #ccc;padding:12px;border-radius:8px;margin:10px 0;word-break:break-all}
+.share-link-box{margin:15px 0;padding:10px;background:#e8f4fd;border-radius:6px;word-break:break-all}
+.hidden{display:none!important}
+/* 问卷主题欢迎页样式 - 明亮阳光+吸睛 */
+.welcome-page{width:100%;height:80vh;max-width:800px;margin:0 auto;border-radius:16px;overflow:hidden;position:relative;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.12);}
+.welcome-bg{width:100%;height:100%;object-fit:cover;}
+.welcome-title{position:absolute;top:20%;left:50%;transform:translateX(-50%);font-size:48px;color:#2196F3;font-weight:700;text-shadow:0 3px 8px rgba(255,255,255,0.9);z-index:2;letter-spacing:3px;}
+.welcome-btns{position:absolute;bottom:25%;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:24px;z-index:2;}
+.welcome-btn{padding:18px 50px;border-radius:12px;border:none;font-size:20px;font-weight:600;cursor:pointer;transition:all 0.3s ease-in-out;box-shadow:0 4px 12px rgba(0,0,0,0.15);}
+.welcome-btn.design{background:#2196F3;color:#fff;border:2px solid #1976D2;}
+.welcome-btn.fill{background:#4CAF50;color:#fff;border:2px solid #388E3C;}
+.welcome-btn:hover{opacity:0.95;transform:translateY(-6px);box-shadow:0 8px 20px rgba(33,150,243,0.25);}
+.welcome-btn.fill:hover{box-shadow:0 8px 20px rgba(76,175,80,0.25);}
+/* 填写问卷分享码弹窗 - 优化质感 */
+.code-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:999;}
+.modal-content{background:#fff;padding:30px;border-radius:12px;width:90%;max-width:400px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.15);}
+.modal-content h3{margin:0 0 20px;color:#333;font-size:20px;}
+.modal-content input{width:100%;padding:12px;border:1px solid #eee;border-radius:8px;margin-bottom:20px;font-size:16px;outline:none;}
+.modal-content input:focus{border-color:#2196F3;box-shadow:0 0 0 3px rgba(33,150,243,0.1);}
+.modal-btns{display:flex;gap:10px;justify-content:center;}
+/* 提交结果提示框 */
+.submit-tip{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.8);color:#fff;padding:20px 40px;border-radius:8px;z-index:1000;font-size:18px;display:none;}
+/* 提交记录样式 */
+.record-box{margin-top:30px;border-top:2px solid #eee;padding-top:20px;}
+.record-item{border:1px solid #eee;border-radius:8px;padding:15px;margin-bottom:10px;}
+.record-item .record-title{font-weight:600;color:#2196F3;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+.record-item .record-content{line-height:1.8;color:#666;}
+.record-empty{text-align:center;padding:30px;color:#999;font-size:16px;}
+</style>
+</head>
+<body>
+<!-- 问卷专属主题欢迎页（首屏）- 明亮阳光+问卷元素 -->
+<div class="welcome-page" id="welcomePage">
+  <img src="https://picsum.photos/seed/questionnaire123/1920/1080?brightness=1.1&contrast=0.85&saturation=1.1" alt="问卷系统专属背景" class="welcome-bg">
+  <div class="welcome-title">欢迎使用问卷卷</div>
+  <div class="welcome-btns">
+    <button class="welcome-btn design" onclick="goToDesign()">开始设计问卷</button>
+    <button class="welcome-btn fill" onclick="showCodeModal()">开始填写问卷</button>
+  </div>
+</div>
+
+<!-- 填写问卷分享码弹窗 -->
+<div class="code-modal hidden" id="codeModal">
+  <div class="modal-content">
+    <h3>请输入问卷分享码</h3>
+    <input type="text" id="fillCode" placeholder="粘贴问卷分享码">
+    <div class="modal-btns">
+      <button class="btn gray" onclick="hideCodeModal()">取消</button>
+      <button class="btn green" onclick="goToFill()">确认填写</button>
+    </div>
+  </div>
+</div>
+
+<!-- 提交结果成功提示框 -->
+<div class="submit-tip" id="submitTip">结果提交成功，已发送给问卷设计者！</div>
+
+<div class="container hidden" id="mainContainer">
+  <div class="header">
+    <h1 id="pageTitle">可分享问卷系统</h1>
+  </div>
+  <!-- 设计端标签页（仅管理员可见） -->
+  <div class="tabs" id="adminTabs">
+    <button class="tab active" data-page="design">设计问卷</button>
+    <button class="tab" data-page="fill">预览填写</button>
+    <button class="tab" data-page="share">分享设置</button>
+  </div>
+  <!-- 设计页面 -->
+  <div class="page active" id="design">
+    <div class="add-q">
+      <input placeholder="问题标题" id="q_title">
+      <select id="q_type">
+        <option value="radio">单选题</option>
+        <option value="checkbox">多选题</option>
+        <option value="text">文本题</option>
+      </select>
+      <select id="q_req">
+        <option value="true">必填</option>
+        <option value="false">非必填</option>
+      </select>
+      <input placeholder="选项用逗号分隔（单选/多选）" id="q_opts">
+      <button class="btn" onclick="addQuestion()">添加问题</button>
+    </div>
+    <div id="design_list"></div>
+    <button class="btn green" onclick="switchPage('fill')">预览/填写</button>
+    
+    <!-- 新增：设计者查看提交记录区域 -->
+    <div class="record-box" id="recordBox">
+      <h3 style="margin:0 0 15px;color:#2196F3">问卷提交结果记录 <span id="recordCount">(0条)</span></h3>
+      <button class="btn orange" onclick="downloadAllRecords()">批量下载所有结果</button>
+      <div id="recordList" class="record-empty">暂无提交记录</div>
+    </div>
+  </div>
+  <!-- 预览填写页面（管理员） -->
+  <div class="page" id="fill">
+    <div>已完成：<span id="p_text">0</span>%</div>
+    <div class="progress"><div class="bar" id="p_bar"></div></div>
+    <div id="form_area"></div>
+    <button class="btn" onclick="downloadAns()">下载答案</button>
+    <button class="btn gray" onclick="resetForm()">重置</button>
+  </div>
+  <!-- 分享设置页面 -->
+  <div class="page" id="share">
+    <h3>1. 生成问卷分享码</h3>
+    <div class="share-box" id="share_code"></div>
+    <button class="btn" onclick="exportSurvey()">生成分享码</button>
+    <button class="btn green" onclick="copyShare()">复制分享码</button>
+    
+    <h3 style="margin-top:20px">2. 生成直接填写链接</h3>
+    <div class="share-link-box" id="share_link"></div>
+    <button class="btn green" onclick="copyShareLink()">复制填写链接</button>
+    
+    <h3 style="margin-top:20px">3. 导入他人问卷</h3>
+    <textarea id="import_code" rows="4" style="width:100%;padding:10px;border-radius:6px" placeholder="粘贴分享码"></textarea>
+    <button class="btn green" onclick="importSurvey()">导入并编辑</button>
+  </div>
+  <!-- 仅填写页面（访客） -->
+  <div id="visitorFillPage" class="hidden">
+    <div style="padding:25px 30px">
+      <h2>问卷填写</h2>
+      <div>已完成：<span id="visitor_p_text">0</span>%</div>
+      <div class="progress"><div class="bar" id="visitor_p_bar"></div></div>
+      <div id="visitor_form_area"></div>
+      <!-- 新增：访客提交结果按钮（替换原下载） -->
+      <button class="btn green" onclick="submitResultToDesigner()">提交并发送结果</button>
+      <button class="btn gray" onclick="visitorResetForm()">重置</button>
+      <button class="btn" style="margin-left:10px" onclick="visitorDownloadAns()">仅下载自己答案</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let data = [];
+const isVisitor = window.location.href.includes('mode=fill'); // 通过URL参数判断是否为访客
+const shareCodeFromUrl = new URLSearchParams(window.location.search).get('code'); // 从URL获取分享码
+const STORAGE_KEY = 'survey_designer_records'; // 本地存储提交记录的key
+// 工具函数
+function $(id){return document.getElementById(id)}
+// 显示提交成功提示
+function showSubmitTip() {
+  const tip = $("submitTip");
+  tip.style.display = 'block';
+  setTimeout(() => {
+    tip.style.display = 'none';
+  }, 2000);
+}
+// 初始化
+function init() {
+  // 若为URL直接访问的填写模式，跳过欢迎页
+  if (isVisitor && shareCodeFromUrl) {
+    $("welcomePage").classList.add('hidden');
+    $("mainContainer").classList.remove('hidden');
+    // 访客模式：隐藏管理界面，显示仅填写界面
+    $("adminTabs").classList.add('hidden');
+    $("design").classList.add('hidden');
+    $("fill").classList.add('hidden');
+    $("share").classList.add('hidden');
+    $("pageTitle").innerText = "问卷填写";
+    $("visitorFillPage").classList.remove('hidden');
+    // 加载问卷
+    loadSurveyFromCode(shareCodeFromUrl);
+  } else {
+    // 否则显示问卷主题欢迎页，隐藏主容器
+    $("welcomePage").classList.remove('hidden');
+    $("mainContainer").classList.add('hidden');
+    // 设计者初始化：加载提交记录
+    loadAllRecords();
+  }
+}
+// 跳转到设计问卷页面
+function goToDesign() {
+  $("welcomePage").classList.add('hidden');
+  $("mainContainer").classList.remove('hidden');
+  renderDesign();
+  // 加载设计者的提交记录
+  loadAllRecords();
+}
+// 显示分享码输入弹窗（自动聚焦）
+function showCodeModal() {
+  $("codeModal").classList.remove('hidden');
+  $("fillCode").value = '';
+  $("fillCode").focus();
+}
+// 隐藏分享码输入弹窗
+function hideCodeModal() {
+  $("codeModal").classList.add('hidden');
+}
+// 验证分享码并跳转到填写页面
+function goToFill() {
+  const code = $("fillCode").value.trim();
+  if (!code) {
+    alert("请输入问卷分享码！");
+    $("fillCode").focus();
+    return;
+  }
+  hideCodeModal();
+  $("welcomePage").classList.add('hidden');
+  $("mainContainer").classList.remove('hidden');
+  // 隐藏管理标签页，显示访客填写页
+  $("adminTabs").classList.add('hidden');
+  $("design").classList.add('hidden');
+  $("fill").classList.add('hidden');
+  $("share").classList.add('hidden');
+  $("pageTitle").innerText = "问卷填写";
+  $("visitorFillPage").classList.remove('hidden');
+  // 加载问卷
+  loadSurveyFromCode(code);
+}
+// 管理员标签页切换
+function switchPage(p){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'))
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'))
+  $(p).classList.add('active')
+  document.querySelector(`[data-page=${p}]`).classList.add('active')
+  if(p==='fill') {
+    renderForm();
+    updateProgress();
+  }
+  // 切换到设计页时刷新提交记录
+  if(p==='design') loadAllRecords();
+}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchPage(t.dataset.page))
+// 管理员：添加问题
+function addQuestion(){
+  let t = $("q_title").value.trim();
+  let ty = $("q_type").value;
+  let r = $("q_req").value==="true";
+  let os = $("q_opts").value.split(',').map(x=>x.trim()).filter(x=>x);
+  if(!t) return alert('请输入问题');
+  if((ty==='radio'||ty==='checkbox')&&os.length<1) return alert('请输入选项');
+  data.push({title:t,type:ty,required:r,options:os})
+  $("q_title").value=$("q_opts").value=''
+  renderDesign()
+}
+// 管理员：渲染设计列表
+function renderDesign(){
+  let dom = $("design_list"); dom.innerHTML=''
+  data.forEach((q,i)=>{
+    let d = document.createElement('div');d.className='design-box'
+    let h = `<div class="title">${i+1}. ${q.title} (${q.type==='radio'?'单选':q.type==='checkbox'?'多选':'文本'}) ${q.required?'*必填':''}</div>`
+    if(q.type!='text') q.options.forEach((o,j)=>{
+      h+=`<div class="opt"><input value="${o}" onchange="updateOpt(${i},${j},this.value)"><button class="del-opt" onclick="delOpt(${i},${j})">×</button></div>`
+    })
+    if(q.type!='text') h+=`<button class="btn green" style="padding:5px 10px" onclick="addOpt(${i})">+添加选项</button>`
+    h+=`<button class="del" onclick="delQ(${i})">删除</button>`
+    d.innerHTML=h; dom.appendChild(d)
+  })
+}
+// 管理员：编辑选项
+function updateOpt(i,j,v){data[i].options[j]=v}
+function delOpt(i,j){data[i].options.splice(j,1);renderDesign()}
+function addOpt(i){data[i].options.push('');renderDesign()}
+function delQ(i){data.splice(i,1);renderDesign()}
+// 管理员：渲染填写表单
+function renderForm(){
+  let f = $("form_area");f.innerHTML=''
+  if(data.length===0) return f.innerHTML='<div style="padding:20px;color:#999">请先设计问卷</div>'
+  data.forEach((q,i)=>{
+    let b = document.createElement('div');b.className='question'
+    let h=`<h4>${i+1}. ${q.title} ${q.required?'*':''}</h4>`
+    if(q.type==='radio') q.options.forEach((o,j)=>{
+      h+=`<label><input type="radio" name="q${i}" value="${o}" oninput="updateProgress()">${o}</label>`
+    })
+    if(q.type==='checkbox') q.options.forEach((o,j)=>{
+      h+=`<label><input type="checkbox" name="q${i}" value="${o}" oninput="updateProgress()">${o}</label>`
+    })
+    if(q.type==='text') h+=`<textarea style="width:100%;height:70px;margin-top:6px" name="q${i}" oninput="updateProgress()"></textarea>`
+    b.innerHTML=h; f.appendChild(b)
+  })
+}
+// 管理员：更新进度条
+function updateProgress(){
+  const requiredList = data.filter(q => q.required);
+  const totalRequired = requiredList.length;
+  if (totalRequired === 0) {
+    $("p_bar").style.width = '100%';
+    $("p_text").innerText = 100;
+    return;
+  }
+  let completed = 0;
+  requiredList.forEach((q, idx) => {
+    const elements = document.getElementsByName(`q${idx}`);
+    if (!elements || elements.length === 0) return;
+    let done = false;
+    if (q.type === 'radio' || q.type === 'checkbox') {
+      for (let el of elements) if (el.checked) { done = true; break; }
+    } else if (q.type === 'text') {
+      if (elements[0].value.trim() !== '') done = true;
+    }
+    if (done) completed++;
+  });
+  const percent = Math.round((completed / totalRequired) * 100);
+  $("p_bar").style.width = percent + '%';
+  $("p_text").innerText = percent;
+}
+// 管理员：下载答案
+function downloadAns(){
+  let txt="问卷答案\n====================\n\n"
+  data.forEach((q,i)=>{
+    txt+=`${i+1}. ${q.title}\n答案：`
+    let items = document.getElementsByName(`q${i}`)
+    let ans=[]
+    if(q.type==='radio'||q.type==='checkbox'){
+      for(let k of items) if(k.checked) ans.push(k.value)
+    }else{
+      ans=[items[0]?.value?.trim()||'']
+    }
+    txt+=ans.length?ans.join("，"):'未填写'
+    txt+='\n\n'
+  })
+  downloadFile(txt, '问卷答案.txt');
+}
+// 管理员：重置表单
+function resetForm(){
+  renderForm();
+  updateProgress();
+}
+// 管理员：导出分享码
+function exportSurvey(){
+  let str = btoa(unescape(encodeURIComponent(JSON.stringify(data))))
+  $("share_code").innerText=str;
+  // 生成直接填写链接
+  const currentUrl = window.location.href.split('?')[0];
+  const shareLink = `${currentUrl}?mode=fill&code=${str}`;
+  $("share_link").innerText = shareLink;
+}
+// 管理员：复制分享码
+function copyShare(){
+  navigator.clipboard.writeText($("share_code").innerText).then(()=>alert("分享码已复制"))
+}
+// 管理员：复制填写链接
+function copyShareLink(){
+  navigator.clipboard.writeText($("share_link").innerText).then(()=>alert("填写链接已复制"))
+}
+// 管理员：导入问卷
+function importSurvey(){
+  try{
+    let str = $("import_code").value.trim()
+    let json = JSON.parse(decodeURIComponent(escape(atob(str))))
+    data=json;renderDesign();alert("导入成功")
+    switchPage('design')
+  }catch(e){alert("导入失败：格式错误")}
+}
+// 访客：加载问卷
+function loadSurveyFromCode(code) {
+  try {
+    data = JSON.parse(decodeURIComponent(escape(atob(code))));
+    renderVisitorForm();
+    updateVisitorProgress();
+  } catch (e) {
+    alert("问卷加载失败，请检查分享码是否正确");
+  }
+}
+// 访客：渲染填写表单
+function renderVisitorForm() {
+  let f = $("visitor_form_area");
+  f.innerHTML = "";
+  if(data.length === 0) {
+    f.innerHTML = '<div style="padding:20px;color:#999">暂无问卷内容</div>';
+    return;
+  }
+  data.forEach((q, i) => {
+    let b = document.createElement("div");
+    b.className = "question";
+    let h = `<h4>${i+1}. ${q.title} ${q.required?"*":""}</h4>`;
+    if (q.type === "radio") {
+      q.options.forEach(o => {
+        h += `<label><input type="radio" name="q${i}" value="${o}" oninput="updateVisitorProgress()">${o}</label>`;
+      });
+    }
+    if (q.type === "checkbox") {
+      q.options.forEach(o => {
+        h += `<label><input type="checkbox" name="q${i}" value="${o}" oninput="updateVisitorProgress()">${o}</label>`;
+      });
+    }
+    if (q.type === "text") {
+      h += `<textarea style="width:100%;height:70px" name="q${i}" oninput="updateVisitorProgress()"></textarea>`;
+    }
+    b.innerHTML = h;
+    f.appendChild(b);
+  });
+}
+// 访客：更新进度条
+function updateVisitorProgress() {
+  const requiredList = data.filter(q => q.required);
+  const total = requiredList.length;
+  if (total === 0) {
+    $("visitor_p_bar").style.width = "100%";
+    $("visitor_p_text").innerText = 100;
+    return;
+  }
+  let c = 0;
+  requiredList.forEach((q, i) => {
+    let items = document.getElementsByName(`q${i}`);
+    let done = false;
+    if (q.type === "radio" || q.type === "checkbox") {
+      for (let k of items) if (k.checked) { done = true; break; }
+    } else {
+      if (items[0] && items[0].value.trim()) done = true;
+    }
+    if (done) c++;
+  });
+  let per = Math.round(c / total * 100);
+  $("visitor_p_bar").style.width = per + "%";
+  $("visitor_p_text").innerText = per;
+}
+// 访客：下载自己答案
+function visitorDownloadAns() {
+  let txt = "我的问卷答案\n====================\n\n";
+  data.forEach((q, i) => {
+    txt += `${i+1}. ${q.title}\n答案：`;
+    let items = document.getElementsByName(`q${i}`);
+    let ans = [];
+    if (q.type === "radio" || q.type === "checkbox") {
+      for (let k of items) if (k.checked) ans.push(k.value);
+    } else {
+      ans = [items[0]?.value?.trim() || "未填写"];
+    }
+    txt += ans.length ? ans.join("，") : "未填写";
+    txt += "\n\n";
+  });
+  downloadFile(txt, '我的问卷答案.txt');
+}
+// 访客：重置表单
+function visitorResetForm() {
+  renderVisitorForm();
+  updateVisitorProgress();
+}
+// 通用下载文件函数
+function downloadFile(content, filename) {
+  let blob = new Blob([content], { type: "text/plain" });
+  let a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/************************ 新增核心功能：结果回传与记录 ************************/
+// 1. 访客：提交结果给设计者（核心）
+function submitResultToDesigner() {
+  // 校验必填项是否完成
+  const requiredList = data.filter(q => q.required);
+  let isAllComplete = true;
+  requiredList.forEach((q, i) => {
+    let items = document.getElementsByName(`q${i}`);
+    let done = false;
+    if (q.type === "radio" || q.type === "checkbox") {
+      for (let k of items) if (k.checked) { done = true; break; }
+    } else {
+      if (items[0] && items[0].value.trim()) done = true;
+    }
+    if (!done) isAllComplete = false;
+  });
+  if (!isAllComplete) {
+    alert("请完成所有必填项后再提交！");
+    return;
+  }
+
+  // 收集填写结果
+  let result = {
+    surveyCode: shareCodeFromUrl || '', // 问卷唯一标识（分享码）
+    submitTime: new Date().toLocaleString(), // 提交时间
+    answers: [] // 答案集合
+  };
+  data.forEach((q, i) => {
+    let items = document.getElementsByName(`q${i}`);
+    let ans = [];
+    if (q.type === "radio" || q.type === "checkbox") {
+      for (let k of items) if (k.checked) ans.push(k.value);
+    } else {
+      ans = [items[0]?.value?.trim() || "未填写"];
+    }
+    result.answers.push({
+      question: q.title,
+      answer: ans.length ? ans.join("，") : "未填写",
+      isRequired: q.required
+    });
+  });
+
+  // 存储结果到本地（设计者可读取）
+  let allRecords = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  allRecords.push(result);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(allRecords));
+
+  // 提示成功并重置表单
+  showSubmitTip();
+  visitorResetForm();
+}
+
+// 2. 设计者：加载所有提交记录
+function loadAllRecords() {
+  let allRecords = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  let recordList = $("recordList");
+  let recordCount = $("recordCount");
+  // 更新记录数量
+  recordCount.innerText = `(${allRecords.length}条)`;
+  // 无记录时显示空提示
+  if (allRecords.length === 0) {
+    recordList.className = "record-empty";
+    recordList.innerHTML = "暂无提交记录";
+    return;
+  }
+  // 有记录时渲染列表
+  recordList.className = "";
+  recordList.innerHTML = "";
+  allRecords.forEach((item, index) => {
+    let recordItem = document.createElement("div");
+    recordItem.className = "record-item";
+    // 拼接答案内容
+    let answerHtml = '';
+    item.answers.forEach((ans, idx) => {
+      answerHtml += `<p><b>${idx+1}. ${ans.question}</b>${ans.isRequired?'*':''}<br/>${ans.answer}</p>`;
+    });
+    // 渲染单条记录
+    recordItem.innerHTML = `
+      <div class="record-title">
+        <span>第${index+1}份结果 - 提交时间：${item.submitTime}</span>
+        <button class="btn gray" style="padding:4px 8px;font-size:12px" onclick="downloadSingleRecord(${index})">下载本份</button>
+      </div>
+      <div class="record-content">${answerHtml}</div>
+    `;
+    recordList.appendChild(recordItem);
+  });
+}
+
+// 3. 设计者：下载单条提交记录
+function downloadSingleRecord(index) {
+  let allRecords = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  let record = allRecords[index];
+  if (!record) return;
+  // 拼接下载内容
+  let txt = `问卷结果 - 提交时间：${record.submitTime}\n====================\n\n`;
+  record.answers.forEach((ans, idx) => {
+    txt += `${idx+1}. ${ans.question}${ans.isRequired?'*':''}\n答案：${ans.answer}\n\n`;
+  });
+  downloadFile(txt, `问卷结果_${record.submitTime.replace(/[\/:]/g, '-')}.txt`);
+}
+
+// 4. 设计者：批量下载所有提交记录
+function downloadAllRecords() {
+  let allRecords = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  if (allRecords.length === 0) {
+    alert("暂无提交记录，无需下载！");
+    return;
+  }
+  // 拼接所有记录内容
+  let txt = `所有问卷提交结果 - 共${allRecords.length}份\n====================\n\n`;
+  allRecords.forEach((record, index) => {
+    txt += `========== 第${index+1}份 - ${record.submitTime} ==========\n`;
+    record.answers.forEach((ans, idx) => {
+      txt += `${idx+1}. ${ans.question}${ans.isRequired?'*':''}\n答案：${ans.answer}\n\n`;
+    });
+    txt += "--------------------------------------------------\n\n";
+  });
+  downloadFile(txt, `所有问卷提交结果_${new Date().toLocaleString().replace(/[\/:]/g, '-')}.txt`);
+}
+
+// 启动初始化
+init();
+</script>
+</body>
+</html>
